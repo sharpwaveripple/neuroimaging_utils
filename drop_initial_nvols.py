@@ -12,10 +12,8 @@ def io_stream():
     print("Done")
 
 
-def set_default_output(source_nii, nvols):
-    basename = source_nii.rstrip(".nii.gz")
-    out_vol = basename + f"_drop{nvols}" + ".nii.gz"
-    return out_vol
+def set_output_name(source_nii, nvols):
+    return source_nii.rstrip(".nii.gz") + f"_drop{nvols}"
 
 
 def parse_input():
@@ -28,7 +26,9 @@ def parse_input():
                         help="Number of initial volumes to drop")
     args = parser.parse_args()
     if args.o is None:
-        args.o = set_default_output(args.i, args.nvols)
+        args.o = set_output_name(args.i, args.nvols)
+    if not args.o.endswith((".nii", ".nii.gz")):
+        args.o += ".nii.gz"
     return args
 
 
