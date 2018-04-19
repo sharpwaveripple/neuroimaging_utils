@@ -7,7 +7,7 @@ import nibabel as nib
 def io_stream():
     args = parse_input()
     dropped_vols = drop_initial_nvols(args.i, args.nvols)
-    print(f"Saving to {args.o}...")
+    print(f"Saving as {args.o}...")
     dropped_vols.to_filename(args.o)
     print("Done")
 
@@ -20,11 +20,11 @@ def set_default_output(source_nii, nvols):
 
 def parse_input():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--in", metavar="\b", type=str, required=True,
+    parser.add_argument("-i", type=str, required=True,
                         help="Input file")
-    parser.add_argument("-o", "--out", metavar="\b", type=str,
+    parser.add_argument("-o", type=str,
                         help="Output file")
-    parser.add_argument("--nvols", type=int, metavar="\b", default=4,
+    parser.add_argument("-nvols", type=int, default=4,
                         help="Number of initial volumes to drop")
     args = parser.parse_args()
     if args.o is None:
