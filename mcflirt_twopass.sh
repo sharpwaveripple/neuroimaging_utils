@@ -8,7 +8,6 @@ echo "Calculating first pass with $raw_func..."
 
 mcflirt -in $raw_func \
   -out first_pass \
-  -stages 4 \
   -meanvol \
   -spline_final \
   -report
