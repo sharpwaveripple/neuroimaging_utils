@@ -15,6 +15,7 @@ echo "Calculating first pass with $func..."
 
 mcflirt -in $func \
   -out $first_pass \
+  -stages 4 \
   -meanvol \
   -spline_final \
   -report
