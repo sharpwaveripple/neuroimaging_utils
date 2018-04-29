@@ -1,6 +1,9 @@
-subj=001_2011
+#!/bin/bash
 
-fs_dir=/JT/FS/$subj
+subj=$1
+
+fs_dir=/project/3015006.07/JT/FS/$subj
+data_dir=/project/3015006.07/MRI/Data/
 T1=$subj/${subj}_T1.nii.gz
 T1_brain=$subj/${subj}_T1_brain.nii.gz
 N4_brain=$subj/${subj}_T1_N4_brain.nii.gz
@@ -32,7 +35,7 @@ N4BiasFieldCorrection -d 3 -i $T1_brain -o $N4_brain -v
 
 fslroi $DTI $b0 0 1
 BBR_fmapless.sh $b0 $T1 $N4_brain $WM $bbr $bbr_inv
-convert_xfm -omat $one_step_xfm -concat $bbr_inv $orig2raw
+convert_xfm -omat $fs2dwi -concat $bbr_inv $orig2raw
 
 # interp=nearestneighbour
 interp=spline
