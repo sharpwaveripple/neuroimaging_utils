@@ -31,6 +31,8 @@ mcflirt -in $func \
   -plots \
   -report
 
-echo "Saved $mcf_func"
+echo "Taking temporal mean of $mcf_func..."
+
+fslmaths $mcf_func -Tmean ${mcf_func}_mean
 
 rm ${first_pass}.nii.gz ${first_pass_mean}.nii.gz 
