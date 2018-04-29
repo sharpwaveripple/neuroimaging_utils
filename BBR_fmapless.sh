@@ -4,7 +4,7 @@
 # INPUT2: Raw anat
 # INPUT3: Brain extracted anat
 # INPUT4: White matter seg
-# INPUT5: Output matrix
+# INPUT5: Output basename
 # INPUT6: Inverse output matrix
 
 # OUTPUT: BBR transform and its inverse
@@ -16,7 +16,7 @@ wmseg=$4
 out=$5
 out_inv=$6
 
-out_file=$(basename $out .mat)
+out_file=$(basename $out)
 out_dir=$(dirname $out) 
 expected_wmseg=$out_dir/${out_file}_fast_wmseg.nii.gz
 wmedge=$out_dir/${out_file}_fast_wmedge.nii.gz
@@ -29,7 +29,7 @@ fi
 epi_reg --epi=$epi --t1=$t1 --t1brain=$t1brain --out=$out --wmseg=$wmseg -v
 
 echo "Saving inverse of $out as $out_inv..."
-convert_xfm -omat $out_inv -inverse $out
+convert_xfm -omat ${out_inv} -inverse ${out}.mat
 
 echo "Removing redunant files..."
 rm ${out}.nii.gz $out_dir/${out_file}_init.mat
