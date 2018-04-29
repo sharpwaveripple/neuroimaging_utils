@@ -10,6 +10,7 @@ func_dir=$(dirname $func)
 mcf_func=$func_dir/${func_file}_mcf
 first_pass=$func_dir/first_pass 
 first_pass_mean=$func_dir/first_pass_mean
+first_pass_mean_reg=$func_dir/first_pass_mean_reg
 
 echo "Calculating first pass with $func..."
 
@@ -36,4 +37,4 @@ echo "Taking temporal mean of $mcf_func..."
 
 fslmaths $mcf_func -Tmean ${mcf_func}_mean
 
-rm ${first_pass}.nii.gz ${first_pass_mean}.nii.gz 
+rm ${first_pass}.nii.gz ${first_pass_mean}.nii.gz ${first_pass_mean_reg}.nii.gz
