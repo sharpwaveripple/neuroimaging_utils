@@ -54,7 +54,7 @@ def parse_input():
     parser.add_argument("--mask", type=str, required=True, metavar="",
                         help="Mask image (overlay)")
     parser.add_argument("--output", type=str, required=True, metavar="",
-                        help="Output .png file")
+                        help="Output file (.png, .svg)")
     parser.add_argument("--x", type=int, required=False, default=5, metavar="",
                         help="Number of columns (default: 5)")
     parser.add_argument("--y", type=int, required=False, default=3, metavar="",
