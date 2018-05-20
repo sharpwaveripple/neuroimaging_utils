@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Simple wrapper for FLIRT, useful for masks and parcs
+USAGE="Usage: $(basename "$0") <inputvol> <refvol> <matrix> <out>
+
+Simple wrapper for FLIRT that applies a nearest neaighbour transform to
+inputvol. Useful for masks or parcellations, where labels are important."
+
+if [[ $# -eq 0 ]] ; then
+    echo "$USAGE"
+    exit 0
+fi
+
+IN_VOL=$1
+REF_VOL=$2
+XFM=$3
+OUT_VOL=$4
+
+flirt -datatype double -interp nearestneighbour \
+  -in "$IN_VOL" -ref "$REF_VOL" -applyxfm -init "$XFM" -out "$OUT_VOL"
