@@ -6,6 +6,22 @@ import nibabel as nib
 import matplotlib.pyplot as plt
 
 
+def bounding_box_3D(img):
+    x = np.any(img, axis=(1, 2))
+    y = np.any(img, axis=(0, 2))
+    z = np.any(img, axis=(0, 1))
+    xmin, xmax = np.where(x)[0][[0, -1]]
+    ymin, ymax = np.where(y)[0][[0, -1]]
+    zmin, zmax = np.where(z)[0][[0, -1]]
+    return xmin, xmax, ymin, ymax, zmin, zmax
+
+def crop_img(img, mask):
+    xmin, xmax, ymin, ymax, zmin, zmax = bounding_box_3D(img)
+    cropped_img = img[xmin:xmax, ymin:ymax, zmin:zmax]
+    cropped_mask = mask[xmin:xmax, ymin:ymax, zmin:zmax]
+    return cropped_img, cropped_mask
+
+
 def pick_slices(x, y, total_slices):
     step_sz = total_slices // (x*y)
     slices = list(range(step_sz//2, total_slices+1, step_sz))
@@ -75,12 +91,14 @@ def io_stream():
     else:
         slice_axis = 2
     # note that conformed space is 256 isotropic, so special case
-    slices = pick_slices(args.x, args.y, base.shape[0])
-    base_img = stack_slices(base.get_data(), slices, args.x, args.y, slice_axis)
-    overlay_img = stack_slices(overlay.get_data(), slices, args.x, args.y,
+    base_cropped, overlay_cropped = crop_img(base.get_data(),
+                                             overlay.get_data())
+    slices = pick_slices(args.x, args.y, base_cropped.shape[0])
+    base_img = stack_slices(base_cropped, slices, args.x, args.y, slice_axis)
+    overlay_img = stack_slices(overlay_cropped, slices, args.x, args.y,
                                slice_axis)
     plt.imshow(base_img, cmap="gray")
-    if len(np.unique(overlay)) > 2:
+    if len(np.unique(overlay_cropped)) > 2:
         plt.imshow(overlay_img, cmap="nipy_spectral", alpha=0.35)
     else:
         plt.imshow(overlay_img, cmap="plasma", alpha=0.35)

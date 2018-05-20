@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Simple wrapper for FLIRT, useful for masks and parcs
 USAGE="Usage: $(basename "$0") <inputvol> <refvol> <matrix> <out>
 
 Simple wrapper for FLIRT that applies a nearest neaighbour transform to

@@ -18,6 +18,10 @@ out_inv=$6
 
 out_file=$(basename $out)
 out_dir=$(dirname $out) 
+omat=${out}.mat
+omat_init=${out}_init.mat
+omat_concat=${out}_concat.mat
+omat_inv=${out}_inv.mat
 expected_wmseg=$out_dir/${out_file}_fast_wmseg.nii.gz
 wmedge=$out_dir/${out_file}_fast_wmedge.nii.gz
 
@@ -28,8 +32,11 @@ fi
 
 epi_reg --epi=$epi --t1=$t1 --t1brain=$t1brain --out=$out --wmseg=$wmseg -v
 
-echo "Saving inverse of $out as $out_inv..."
-convert_xfm -omat ${out_inv} -inverse ${out}.mat
+# echo "Concatenating $omat_init with $omat..."
+# convert_xfm -omat $omat_concat -concat $omat $omat_init
+
+echo "Inverting $omat_concat to $out_inv..."
+convert_xfm -omat $out_inv -inverse $omat
 
 echo "Removing redunant files..."
 rm ${out}.nii.gz $out_dir/${out_file}_init.mat
