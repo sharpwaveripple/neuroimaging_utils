@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+
+import os
+import argparse
+import numpy as np
+
+def cmd_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', required=True)
+    parser.add_argument('--length', action='store_true')
+    args = parser.parse_args()
+    return args
+
+def get_results_dir(bedpost_dir):
+    abspath = os.path.abspath(bedpost_dir)
+    bedpost_contents = os.listdir(abspath)
+    bedpost_contents.remove('xfms')
+    bedpost_contents = [os.path.join(bedpost_dir, x) for x in bedpost_contents]
+    results_dir = sorted([x for x in bedpost_contents if os.path.isdir(x)])
+    return results_dir
+
+def fill_conn_mat(results, mat_type='paths'):
+    if mat_type not in ['paths', 'lengths']:
+        print(f'{mat_type} not recognized!')
+        exit(1)
+    elif mat_type == 'lengths':
+        omatrix = 'matrix_seeds_to_all_targets_lengths'
+    else:
+        omatrix = 'matrix_seeds_to_all_targets'
+    print(f"Making {mat_type} matrix...")
+    num_rois = len(results)
+    conn_mat = np.empty((num_rois, num_rois))
+    for ind, folder in enumerate(results):
+        path_mat = os.path.join(folder, omatrix)
+        paths = np.loadtxt(path_mat)
+        num_seeds = paths.shape[0]
+        summ_paths = np.transpose(np.sum(paths, axis=0))
+        if mat_type == 'paths':
+            summ_paths = summ_paths / (5000 * num_seeds)
+        conn_mat[ind, :] = summ_paths
+    np.fill_diagonal(conn_mat, 0)
+    return conn_mat
+
+
+if __name__ == "__main__":
+    args = cmd_parser()
+    results = get_results_dir(args.i)
+    if args.length:
+        filled_mat = fill_conn_mat(results, 'lengths')
+        out_file = os.path.join(args.i, 'length_mat.txt')
+    else:
+        filled_mat = fill_conn_mat(results)
+        out_file = os.path.join(args.i, 'path_mat.txt')
+    np.savetxt(out_file, filled_mat)
