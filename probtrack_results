@@ -15,6 +15,7 @@ def get_results_dir(bedpost_dir):
     abspath = os.path.abspath(bedpost_dir)
     bedpost_contents = os.listdir(abspath)
     bedpost_contents.remove('xfms')
+    bedpost_contents.remove('logs')
     bedpost_contents = [os.path.join(bedpost_dir, x) for x in bedpost_contents]
     results_dir = sorted([x for x in bedpost_contents if os.path.isdir(x)])
     return results_dir
