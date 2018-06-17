@@ -35,9 +35,11 @@ def fill_conn_mat(results, mat_type='paths'):
         path_mat = os.path.join(folder, omatrix)
         paths = np.loadtxt(path_mat)
         num_seeds = paths.shape[0]
-        summ_paths = np.transpose(np.sum(paths, axis=0))
         if mat_type == 'paths':
+            summ_paths = np.transpose(np.sum(paths, axis=0))
             summ_paths = summ_paths / (5000 * num_seeds)
+        else:
+            summ_paths = np.transpose(np.mean(paths, axis=0))
         conn_mat[ind, :] = summ_paths
     np.fill_diagonal(conn_mat, 0)
     return conn_mat
