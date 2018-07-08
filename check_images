@@ -65,17 +65,17 @@ def save_figure(filename, quality):
 
 def parse_input():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--anat", type=str, required=True, metavar="",
-                        help="Anatomical image (base)")
-    parser.add_argument("--mask", type=str, required=True, metavar="",
-                        help="Mask image (overlay)")
-    parser.add_argument("--output", type=str, required=True, metavar="",
-                        help="Output file (.png, .svg)")
-    parser.add_argument("--x", type=int, required=False, default=5, metavar="",
+    parser.add_argument("-b", type=str, required=True, metavar="",
+                        help="Base image")
+    parser.add_argument("-o", type=str, required=True, metavar="",
+                        help="Overlay image")
+    parser.add_argument("-s", type=str, required=True, metavar="",
+                        help=".png file to save as")
+    parser.add_argument("-x", type=int, required=False, default=5, metavar="",
                         help="Number of columns (default: 5)")
-    parser.add_argument("--y", type=int, required=False, default=3, metavar="",
+    parser.add_argument("-y", type=int, required=False, default=3, metavar="",
                         help="Number of rows (default: 3)")
-    parser.add_argument("--quality",
+    parser.add_argument("-q",
                         type=str, required=False, default="medium", metavar="",
                         help="Quality of output figure (low/{medium}/high)")
     args = parser.parse_args()
@@ -84,8 +84,8 @@ def parse_input():
 
 def io_stream():
     args = parse_input()
-    base = nib.load(args.anat)
-    overlay = nib.load(args.mask)
+    base = nib.load(args.b)
+    overlay = nib.load(args.o)
     if isinstance(base, nib.freesurfer.MGHImage):
         slice_axis = 1
     else:
@@ -104,7 +104,10 @@ def io_stream():
         plt.imshow(overlay_img, cmap="plasma", alpha=0.35)
     plt.axis("off")
     # plt.show()
-    save_figure(args.output, args.quality)
+    if args.s.endswith(".png"):
+        save_figure(args.s, args.q)
+    else:
+        save_figure(args.s + ".png", args.q)
 
 
 if __name__ == "__main__":
