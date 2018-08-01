@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python
 
 import argparse
 import numpy as np
@@ -24,7 +24,7 @@ def crop_img(img, mask):
 
 def pick_slices(x, y, total_slices):
     step_sz = total_slices // (x*y)
-    slices = list(range(step_sz//2, total_slices+1, step_sz))
+    slices = list(range(step_sz//2, total_slices, step_sz-1))
     return slices
 
 
@@ -43,8 +43,8 @@ def stack_slices(img, slices, x, y, slice_axis):
             if j == 0:
                 row_img = slice_img(img, slice_num, slice_axis)
             else:
-                row_img = np.hstack((row_img, slice_img(img, slice_num,
-                                                        slice_axis)))
+                row_img = np.hstack((row_img,
+                                     slice_img(img, slice_num, slice_axis)))
             ind += 1
         if i == 0:
             col_img = row_img
@@ -88,26 +88,37 @@ def io_stream():
     overlay = nib.load(args.o)
     if isinstance(base, nib.freesurfer.MGHImage):
         slice_axis = 1
+        print(f"MGH format detected, setting slice axis = 1")
     else:
         slice_axis = 2
+        print(f"Nifti format detected, setting slice axis = 2")
     # note that conformed space is 256 isotropic, so special case
+    print(f"Image dimensions are: {base.shape}")
     base_cropped, overlay_cropped = crop_img(base.get_data(),
                                              overlay.get_data())
+    print(f"Cropped dimensions are: {base_cropped.shape}")
     slices = pick_slices(args.x, args.y, base_cropped.shape[0])
+    print(f"Picking slices: {slices}")
     base_img = stack_slices(base_cropped, slices, args.x, args.y, slice_axis)
     overlay_img = stack_slices(overlay_cropped, slices, args.x, args.y,
                                slice_axis)
-    plt.imshow(base_img, cmap="gray")
-    if len(np.unique(overlay_cropped)) > 2:
-        plt.imshow(overlay_img, cmap="nipy_spectral", alpha=0.35)
+    base_cmap = "gray"
+    plt.imshow(base_img, cmap=base_cmap)
+    mask_vals = len(np.unique(overlay_cropped))
+    if mask_vals > 2:
+        overlay_cmap = "nipy_spectral"
     else:
-        plt.imshow(overlay_img, cmap="plasma", alpha=0.35)
+        overlay_cmap = "plasma"
+    print(f"Base image cmap: {base_cmap}, overlay image cmap: {overlay_cmap}")
+    plt.imshow(overlay_img, cmap=overlay_cmap, alpha=0.35)
     plt.axis("off")
     # plt.show()
     if args.s.endswith(".png"):
-        save_figure(args.s, args.q)
+        image_fname = args.s
     else:
-        save_figure(args.s + ".png", args.q)
+        image_fname = args.s + ".png"
+    print(f"Saving layered image as: {image_fname}")
+    save_figure(image_fname, args.q)
 
 
 if __name__ == "__main__":
