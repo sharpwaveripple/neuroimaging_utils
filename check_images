@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
+import os
 import argparse
 import numpy as np
-import nibabel as nib
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+import nibabel as nib
 
 
 def bounding_box_3D(img):
@@ -15,16 +17,20 @@ def bounding_box_3D(img):
     zmin, zmax = np.where(z)[0][[0, -1]]
     return xmin, xmax, ymin, ymax, zmin, zmax
 
+
 def crop_img(img, mask):
+    print(f"Original dimensions are: {img.shape}")
     xmin, xmax, ymin, ymax, zmin, zmax = bounding_box_3D(img)
     cropped_img = img[xmin:xmax, ymin:ymax, zmin:zmax]
     cropped_mask = mask[xmin:xmax, ymin:ymax, zmin:zmax]
+    print(f"Cropped dimensions are: {cropped_img.shape}")
     return cropped_img, cropped_mask
 
 
 def pick_slices(x, y, total_slices):
     step_sz = total_slices // (x*y)
     slices = list(range(step_sz//2, total_slices, step_sz-1))
+    print(f"Need to take {x*y} slices. Total number of axial slices is {total_slices}, so moving in steps of {step_sz-1}")
     return slices
 
 
@@ -53,6 +59,25 @@ def stack_slices(img, slices, x, y, slice_axis):
     return col_img
 
 
+def scale_range (input, min, max):
+    input += -(np.min(input))
+    input /= np.max(input) / (max - min)
+    input += min
+    return input
+
+
+def build_lut():
+    script_path = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(script_path)
+    lut_file = os.path.abspath('../freesurfer_utils/info/desikan.txt')
+    print(f"Reading {lut_file} for custom colormap...")
+    desikan = np.loadtxt(lut_file, delimiter=',', skiprows=1, usecols=(2, 3, 4))
+    desikan = np.unique(desikan, axis=0)  # eliminate doubled colors
+    desikan_scaled = scale_range(desikan, 0, 1)
+    desikan_cmap = mpl.colors.ListedColormap(desikan_scaled)
+    return desikan_cmap
+
+
 def save_figure(filename, quality):
     if quality == "low":
         output_dpi = 100
@@ -64,7 +89,8 @@ def save_figure(filename, quality):
 
 
 def parse_input():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="""Simple quality check tool for registrations and parcellations.
+    Built in Python 3.6. Requires numpy, matplotlib, and nibabel.""")
     parser.add_argument("-b", type=str, required=True, metavar="",
                         help="Base image")
     parser.add_argument("-o", type=str, required=True, metavar="",
@@ -82,45 +108,50 @@ def parse_input():
     return args
 
 
-def io_stream():
-    args = parse_input()
-    base = nib.load(args.b)
-    overlay = nib.load(args.o)
+def io_stream(base_file, overlay_file, save_file, x_imgs, y_imgs, quality):
+    print(f"Loading {base_file} as base...")
+    base = nib.load(base_file)
+    print(f"Loading {overlay_file} as overlay...")
+    overlay = nib.load(overlay_file)
     if isinstance(base, nib.freesurfer.MGHImage):
         slice_axis = 1
         print(f"MGH format detected, setting slice axis = 1")
     else:
         slice_axis = 2
         print(f"Nifti format detected, setting slice axis = 2")
-    # note that conformed space is 256 isotropic, so special case
-    print(f"Image dimensions are: {base.shape}")
     base_cropped, overlay_cropped = crop_img(base.get_data(),
                                              overlay.get_data())
-    print(f"Cropped dimensions are: {base_cropped.shape}")
-    slices = pick_slices(args.x, args.y, base_cropped.shape[0])
-    print(f"Picking slices: {slices}")
-    base_img = stack_slices(base_cropped, slices, args.x, args.y, slice_axis)
-    overlay_img = stack_slices(overlay_cropped, slices, args.x, args.y,
+    slices = pick_slices(x_imgs, y_imgs, base_cropped.shape[0])
+    print(f"Slices used: {slices}")
+    base_img = stack_slices(base_cropped, slices, x_imgs, y_imgs, slice_axis)
+    overlay_img = stack_slices(overlay_cropped, slices, x_imgs, y_imgs,
                                slice_axis)
     base_cmap = "gray"
     plt.imshow(base_img, cmap=base_cmap)
     mask_vals = len(np.unique(overlay_cropped))
     if mask_vals > 2:
-        overlay_cmap = "nipy_spectral"
+        desikan_cmap = build_lut()
+        plt.imshow(overlay_img, cmap=desikan_cmap, alpha=0.35)
     else:
         overlay_cmap = "plasma"
-    print(f"Base image cmap: {base_cmap}, overlay image cmap: {overlay_cmap}")
-    plt.imshow(overlay_img, cmap=overlay_cmap, alpha=0.35)
+        plt.imshow(overlay_img, cmap=overlay_cmap, alpha=0.35)
     plt.axis("off")
     # plt.show()
     if args.s.endswith(".png"):
-        image_fname = args.s
+        image_fname = save_file
     else:
-        image_fname = args.s + ".png"
-    print(f"Saving layered image as: {image_fname}")
-    save_figure(image_fname, args.q)
+        image_fname = save_file + ".png"
+    print(f"Saving layered image as {image_fname}...")
+    save_figure(image_fname, quality)
 
 
 if __name__ == "__main__":
-    io_stream()
-
+    args = parse_input()
+    base_file = os.path.abspath(args.b)
+    overlay_file = os.path.abspath(args.o)
+    save_file = os.path.abspath(args.s)
+    x_imgs = args.x
+    y_imgs = args.y
+    quality = args.q
+    io_stream(base_file, overlay_file, save_file, x_imgs, y_imgs, quality)
+    print("Done.\n")
