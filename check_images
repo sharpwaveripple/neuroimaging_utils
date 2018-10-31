@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 import nibabel as nib
 
 
+def isinteger(x):
+    return np.equal(np.mod(x, 1), 0)
+
 def bounding_box_3D(img):
     x = np.any(img, axis=(1, 2))
     y = np.any(img, axis=(0, 2))
@@ -59,7 +62,7 @@ def stack_slices(img, slices, x, y, slice_axis):
     return col_img
 
 
-def scale_range (input, min, max):
+def scale_range(input, min, max):
     input += -(np.min(input))
     input /= np.max(input) / (max - min)
     input += min
