@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """Script to expand regression parameters using backwards temporal difference 
 and square with floating point precision"""
 
@@ -8,7 +10,7 @@ import numpy as np
 def expand_regressors():
     args = parse_input()
     confounds = normalise(square(derive_backwards(np.loadtxt(args.i))))
-    np.savetxt(args.o, confounds, delimiter=' ', fmt='%f')
+    np.savetxt(args.o, confounds, delimiter='\t', fmt='%f')
 
 
 def parse_input():
