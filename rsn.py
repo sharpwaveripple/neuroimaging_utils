@@ -1,18 +1,26 @@
 #!/usr/bin/env python
 
-import sys
+import argparse
 import numpy as np
 import nibabel as nib
 from scipy import stats
 
+parser = argparse.ArgumentParser(description="""Extract functional connectivity network
+using an input 4D functional image and 3D atlas""")
+
+parser.add_argument("input", metavar="input",
+                    help="Path to input 4D image (should be .nii.gz)")
+parser.add_argument("output", metavar="output",
+                    help="Output functional connectivity matrix (.csv)")
+parser.add_argument("atlas", metavar="atlas",
+                    help="3D atlas image registered to input image")
+parser.add_argument("--zero_anticorrelations", action='store_true',
+                    help="Zero significantly negative correlations")
+args = parser.parse_args()
 
 # Load data and infer properties
-in_func = sys.argv[1]
-atlas = sys.argv[2]
-out_mat = sys.argv[3]
-
-func_data = nib.load(in_func).get_data()
-aparc_data = nib.load(atlas).get_data()
+func_data = nib.load(args.input).get_data()
+aparc_data = nib.load(args.atlas).get_data()
 n_nodes = len(np.unique(aparc_data)) - 1
 n_vols = func_data.shape[-1]
 
@@ -31,8 +39,9 @@ for i in range(n_nodes):
         r, p = stats.pearsonr(mean_signal[i], mean_signal[j])
 
         # Zero significantly negative correlations
-        if r < 0 and p < 0.05:
+        if args.zero_anticorrelations and r < 0 and p < 0.05:
             r = 0
+
         corrmat[i, j] = r
 
 
@@ -40,6 +49,5 @@ for i in range(n_nodes):
 np.fill_diagonal(corrmat, 0)
 corrmat = np.arctanh(corrmat)
 
-
 # Save matrix as csv with 16 digit precision
-np.savetxt(out_mat, corrmat, fmt='%.16f', delimiter=',')
+np.savetxt(args.output, corrmat, fmt='%.16f', delimiter=',')
